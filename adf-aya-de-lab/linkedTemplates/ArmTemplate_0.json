@@ -1,0 +1,795 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-aya-de-lab"
+		},
+		"AzureSQL_Rebrickable_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'AzureSQL_Rebrickable'"
+		},
+		"DL_Rebrickable_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'DL_Rebrickable'"
+		},
+		"LS_AzureSQLDB_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_AzureSQLDB'"
+		},
+		"AzureSQL_Rebrickable_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "ayaanalytics.database.windows.net"
+		},
+		"AzureSQL_Rebrickable_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "AyaAnalytics"
+		},
+		"AzureSQL_Rebrickable_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "KhineMyintMyat"
+		},
+		"DL_Rebrickable_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://azdelab.dfs.core.windows.net/"
+		},
+		"HTTP_Rebrickable_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://cdn.rebrickable.com/media/downloads/"
+		},
+		"LS_AzureSQLDB_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "dbserverlab.database.windows.net"
+		},
+		"LS_AzureSQLDB_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "lab_db"
+		},
+		"LS_AzureSQLDB_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "demo"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSQL_Rebrickable')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('AzureSQL_Rebrickable_properties_typeProperties_server')]",
+					"database": "[parameters('AzureSQL_Rebrickable_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('AzureSQL_Rebrickable_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('AzureSQL_Rebrickable_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DL_Rebrickable')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('DL_Rebrickable_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('DL_Rebrickable_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/HTTP_Rebrickable')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "HttpServer",
+				"typeProperties": {
+					"url": "[parameters('HTTP_Rebrickable_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_AzureSQLDB')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('LS_AzureSQLDB_properties_typeProperties_server')]",
+					"database": "[parameters('LS_AzureSQLDB_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('LS_AzureSQLDB_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_AzureSQLDB_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Rebrickabel_Sink_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DL_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "themes.parquet",
+						"fileSystem": "lego"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DL_Rebrickable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Rebrickable_SQL_Sink')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSQL_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"schemaName": {
+						"type": "string"
+					},
+					"tableName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "id",
+						"type": "varchar"
+					},
+					{
+						"name": "name",
+						"type": "varchar"
+					},
+					{
+						"name": "parent_id",
+						"type": "varchar"
+					},
+					{
+						"name": "load_date",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().schemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().tableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSQL_Rebrickable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Rebrickable_Sink_CSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DL_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileSystem": {
+						"type": "string"
+					},
+					"directory": {
+						"type": "string"
+					},
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().directory",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().fileSystem",
+							"type": "Expression"
+						}
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DL_Rebrickable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Rebrickable_Source')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "HTTP_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": "themes.csv.gz"
+					},
+					"columnDelimiter": ",",
+					"compressionCodec": "gzip",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/HTTP_Rebrickable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_Orders_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DL_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "step2C_dataset"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Orders.csv",
+						"fileSystem": "raw"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "order_id",
+						"type": "String"
+					},
+					{
+						"name": "customer_id",
+						"type": "String"
+					},
+					{
+						"name": "Store_id",
+						"type": "String"
+					},
+					{
+						"name": "Date",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DL_Rebrickable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_Payments_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DL_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "step2C_dataset"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Payments.csv",
+						"fileSystem": "raw"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "order_id",
+						"type": "String"
+					},
+					{
+						"name": "payment_id",
+						"type": "String"
+					},
+					{
+						"name": "type",
+						"type": "String"
+					},
+					{
+						"name": "descriptions",
+						"type": "String"
+					},
+					{
+						"name": "pDate",
+						"type": "String"
+					},
+					{
+						"name": "Status",
+						"type": "String"
+					},
+					{
+						"name": "Details",
+						"type": "String"
+					},
+					{
+						"name": "Total_Invoice",
+						"type": "String"
+					},
+					{
+						"name": "Due_Amount",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DL_Rebrickable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_csv_email_input')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DL_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "testing_1"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "emaildata.csv",
+						"folderPath": "input",
+						"fileSystem": "test"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "emailid",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DL_Rebrickable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_csv_errors')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DL_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "testing_1"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "errors",
+						"fileSystem": "lego"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Name",
+						"type": "String"
+					},
+					{
+						"name": "Category",
+						"type": "String"
+					},
+					{
+						"name": "Status",
+						"type": "String"
+					},
+					{
+						"name": "Error",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DL_Rebrickable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_csv_errors_with_param')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DL_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ds_param_file_name": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "testing_1"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().ds_param_file_name",
+							"type": "Expression"
+						},
+						"folderPath": "errors",
+						"fileSystem": "lego"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Name",
+						"type": "String"
+					},
+					{
+						"name": "Category",
+						"type": "String"
+					},
+					{
+						"name": "Status",
+						"type": "String"
+					},
+					{
+						"name": "Error",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DL_Rebrickable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_csv_input')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DL_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "testing_1"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "empdata.csv",
+						"folderPath": "input",
+						"fileSystem": "test"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DL_Rebrickable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_csv_input_with_param')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DL_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ds_param_file_name": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "testing_1"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().ds_param_file_name",
+							"type": "Expression"
+						},
+						"folderPath": "input",
+						"fileSystem": "test"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": false,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DL_Rebrickable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_csv_output')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DL_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "testing_1"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "output",
+						"fileSystem": "test"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DL_Rebrickable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_customer_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DL_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "step2C_dataset"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Customers.csv",
+						"fileSystem": "raw"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "customer_id",
+						"type": "String"
+					},
+					{
+						"name": "Customerslastname",
+						"type": "String"
+					},
+					{
+						"name": "Customersfirstname",
+						"type": "String"
+					},
+					{
+						"name": "CustomersCountry",
+						"type": "String"
+					},
+					{
+						"name": "Customersage",
+						"type": "String"
+					},
+					{
+						"name": "Customersgender",
+						"type": "String"
+					},
+					{
+						"name": "Customersemail",
+						"type": "String"
+					},
+					{
+						"name": "Customersprofession",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DL_Rebrickable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_processed_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DL_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "step2C_dataset"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "processed"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DL_Rebrickable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_sqldb')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQLDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "step2C_dataset"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "SalesLT",
+					"table": "Customer"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureSQLDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_txt_input')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DL_Rebrickable",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "testing_1"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "input",
+						"fileSystem": "test"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DL_Rebrickable')]"
+			]
+		}
+	]
+}

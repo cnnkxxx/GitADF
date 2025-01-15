@@ -1,0 +1,10 @@
+{
+	"fileList": {
+		"type": "array",
+		"value": [
+			"themes.csv.gz",
+			"colors.csv.gz",
+			"parts.csv.gz"
+		]
+	}
+}

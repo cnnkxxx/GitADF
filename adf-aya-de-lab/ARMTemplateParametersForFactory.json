@@ -1,0 +1,42 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-aya-de-lab"
+		},
+		"AzureSQL_Rebrickable_password": {
+			"value": ""
+		},
+		"DL_Rebrickable_accountKey": {
+			"value": ""
+		},
+		"LS_AzureSQLDB_password": {
+			"value": ""
+		},
+		"AzureSQL_Rebrickable_properties_typeProperties_server": {
+			"value": "ayaanalytics.database.windows.net"
+		},
+		"AzureSQL_Rebrickable_properties_typeProperties_database": {
+			"value": "AyaAnalytics"
+		},
+		"AzureSQL_Rebrickable_properties_typeProperties_userName": {
+			"value": "KhineMyintMyat"
+		},
+		"DL_Rebrickable_properties_typeProperties_url": {
+			"value": "https://azdelab.dfs.core.windows.net/"
+		},
+		"HTTP_Rebrickable_properties_typeProperties_url": {
+			"value": "https://cdn.rebrickable.com/media/downloads/"
+		},
+		"LS_AzureSQLDB_properties_typeProperties_server": {
+			"value": "dbserverlab.database.windows.net"
+		},
+		"LS_AzureSQLDB_properties_typeProperties_database": {
+			"value": "lab_db"
+		},
+		"LS_AzureSQLDB_properties_typeProperties_userName": {
+			"value": "demo"
+		}
+	}
+}
