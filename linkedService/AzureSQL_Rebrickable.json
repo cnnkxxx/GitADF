@@ -1,0 +1,17 @@
+{
+	"name": "AzureSQL_Rebrickable",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "ayaanalytics.database.windows.net",
+			"database": "AyaAnalytics",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "KhineMyintMyat",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDQwREZBQkJELTlEMTUtNEExQy1BOTY4LTc1RDM5MzExRTdERV85NDNiNjQ2ZC00YWJlLTQ4MzMtOWEwMi02OTg0YmI3NDhlZjciDQp9"
+		}
+	}
+}

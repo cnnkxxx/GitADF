@@ -1,0 +1,22 @@
+{
+	"name": "ds_txt_input",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DL_Rebrickable",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "testing_1"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "input",
+				"fileSystem": "test"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

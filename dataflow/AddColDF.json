@@ -1,0 +1,49 @@
+{
+	"name": "AddColDF",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Rebrickable_Sink_CSV",
+						"type": "DatasetReference"
+					},
+					"name": "ThemeSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Rebrickable_Sink_CSV",
+						"type": "DatasetReference"
+					},
+					"name": "ThemeSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AddLoadDateCol"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     fileName as string (toString(''))",
+				"}",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> ThemeSource",
+				"ThemeSource derive(load_date = currentDate()) ~> AddLoadDateCol",
+				"AddLoadDateCol sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:[($fileName)],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ThemeSink"
+			]
+		}
+	}
+}

@@ -1,0 +1,111 @@
+{
+	"name": "6_convert_array_to_string_using_join_fun",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup_email",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "ds_csv_email_input",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup_email",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup_email').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Append_Email",
+							"type": "AppendVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "pl_var_array_email",
+								"value": {
+									"value": "@item().emailid",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Set_var_Email_String",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "ForEach1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "pl_var_str_email",
+					"value": {
+						"value": "@join(variables('pl_var_array_email'),';')",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"pl_var_array_email": {
+				"type": "Array"
+			},
+			"pl_var_str_email": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "testing_1"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-12-23T03:01:14Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

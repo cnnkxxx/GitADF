@@ -1,0 +1,21 @@
+{
+	"name": "adf-aya-de-lab",
+	"properties": {
+		"globalParameters": {
+			"fileList": {
+				"type": "array",
+				"value": [
+					"themes.csv.gz",
+					"colors.csv.gz",
+					"parts.csv.gz"
+				]
+			}
+		}
+	},
+	"location": "southeastasia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "84365900-faed-4884-aa25-31bbb58c0d68",
+		"tenantId": "605f214b-e6c9-49ec-900f-091d94bd326b"
+	}
+}

@@ -1,0 +1,21 @@
+{
+	"name": "Rebrickabel_Sink_Parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DL_Rebrickable",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "themes.parquet",
+				"fileSystem": "lego"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

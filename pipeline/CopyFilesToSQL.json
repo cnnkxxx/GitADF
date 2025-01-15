@@ -1,0 +1,102 @@
+{
+	"name": "CopyFilesToSQL",
+	"properties": {
+		"activities": [
+			{
+				"name": "Files",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().globalParameters.fileList",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "ExeCopyFromDLToSQL",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "SetTableName",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "CopyFromDLToSQL",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"schemaName": {
+										"value": "@pipeline().parameters.schemaName",
+										"type": "Expression"
+									},
+									"tableName": {
+										"value": "@variables('tableName')",
+										"type": "Expression"
+									},
+									"fileSystem": {
+										"value": "@pipeline().parameters.fileSystem",
+										"type": "Expression"
+									},
+									"directory": {
+										"value": "@variables('tableName')",
+										"type": "Expression"
+									},
+									"file": {
+										"value": "@variables('tableName')",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "SetTableName",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "tableName",
+								"value": {
+									"value": "@replace(item(), '.csv.gz', '')",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"fileSystem": {
+				"type": "string",
+				"defaultValue": "lego"
+			},
+			"schemaName": {
+				"type": "string",
+				"defaultValue": "test"
+			}
+		},
+		"variables": {
+			"tableName": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-08-08T03:57:40Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

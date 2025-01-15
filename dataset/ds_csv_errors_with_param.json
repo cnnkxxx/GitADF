@@ -1,0 +1,53 @@
+{
+	"name": "ds_csv_errors_with_param",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DL_Rebrickable",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ds_param_file_name": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "testing_1"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().ds_param_file_name",
+					"type": "Expression"
+				},
+				"folderPath": "errors",
+				"fileSystem": "lego"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "Name",
+				"type": "String"
+			},
+			{
+				"name": "Category",
+				"type": "String"
+			},
+			{
+				"name": "Status",
+				"type": "String"
+			},
+			{
+				"name": "Error",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

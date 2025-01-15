@@ -1,0 +1,259 @@
+{
+	"name": "CopyFromHTTPToDL",
+	"properties": {
+		"activities": [
+			{
+				"name": "HTTPToDL",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "SetTempFileName",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "GET"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"enableSkipIncompatibleRow": true,
+					"logSettings": {
+						"enableCopyActivityLog": true,
+						"copyActivityLogSettings": {
+							"logLevel": "Warning",
+							"enableReliableLogging": false
+						},
+						"logLocationSettings": {
+							"linkedServiceName": {
+								"referenceName": "DL_Rebrickable",
+								"type": "LinkedServiceReference"
+							},
+							"path": "lego/errors/themes"
+						}
+					},
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "Rebrickable_Source",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Rebrickable_Sink_CSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"fileSystem": {
+								"value": "@pipeline().parameters.fileSystem",
+								"type": "Expression"
+							},
+							"directory": {
+								"value": "@pipeline().parameters.directory",
+								"type": "Expression"
+							},
+							"fileName": {
+								"value": "@variables('tempFileName')",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "AddLoadDateCol",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "HTTPToDL",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "AddColDF",
+						"type": "DataFlowReference",
+						"parameters": {
+							"fileName": {
+								"value": "'@{pipeline().parameters.fileName}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"ThemeSource": {
+								"fileSystem": {
+									"value": "@pipeline().parameters.fileSystem",
+									"type": "Expression"
+								},
+								"directory": {
+									"value": "@pipeline().parameters.directory",
+									"type": "Expression"
+								},
+								"fileName": {
+									"value": "@variables('tempFileName')",
+									"type": "Expression"
+								}
+							},
+							"ThemeSink": {
+								"fileSystem": {
+									"value": "@pipeline().parameters.fileSystem",
+									"type": "Expression"
+								},
+								"directory": {
+									"value": "@pipeline().parameters.directory",
+									"type": "Expression"
+								},
+								"fileName": {
+									"value": "@pipeline().parameters.fileName",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "DeleteTempFile",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "AddLoadDateCol",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "Rebrickable_Sink_CSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"fileSystem": {
+								"value": "@pipeline().parameters.fileSystem",
+								"type": "Expression"
+							},
+							"directory": {
+								"value": "@pipeline().parameters.directory",
+								"type": "Expression"
+							},
+							"fileName": {
+								"value": "@variables('tempFileName')",
+								"type": "Expression"
+							}
+						}
+					},
+					"logStorageSettings": {
+						"linkedServiceName": {
+							"referenceName": "DL_Rebrickable",
+							"type": "LinkedServiceReference"
+						},
+						"path": "lego/errors"
+					},
+					"enableLogging": true,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "SetTempFileName",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "tempFileName",
+					"value": {
+						"value": "@concat('temp',pipeline().parameters.fileName)",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"fileSystem": {
+				"type": "string",
+				"defaultValue": "lego"
+			},
+			"directory": {
+				"type": "string",
+				"defaultValue": "themes"
+			},
+			"fileName": {
+				"type": "string",
+				"defaultValue": "themes.csv"
+			}
+		},
+		"variables": {
+			"tempFileName": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-08-08T02:42:18Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
