@@ -13,6 +13,28 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/ds_sqldb')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQLDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "step2C_dataset"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "SalesLT",
+					"table": "Customer"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ds_txt_input')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -188,7 +210,9 @@
 				"annotations": [],
 				"lastPublishTime": "2025-01-10T06:36:41Z"
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_sqldb')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/1_get_file_name_from_source_folder')]",
@@ -1541,6 +1565,73 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Excel1",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_csv_output",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [],
+					"scriptLines": [
+						"source(output(",
+						"          Column_1 as string,",
+						"          Column_2 as string,",
+						"          Column_3 as string,",
+						"          Column_4 as string,",
+						"          Column_5 as string,",
+						"          Column_6 as string,",
+						"          Column_7 as string,",
+						"          Column_8 as string,",
+						"          Column_9 as string,",
+						"          Column_10 as string,",
+						"          Column_11 as string,",
+						"          Column_12 as string,",
+						"          Column_13 as string,",
+						"          Column_14 as string,",
+						"          Column_15 as string,",
+						"          Column_16 as string,",
+						"          Column_17 as string,",
+						"          Column_18 as string,",
+						"          Column_19 as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> source1",
+						"source1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('key',",
+						"          0,",
+						"          Column_3",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/df_paymentdetails')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -2034,399 +2125,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/AddColDF')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/CopyFromDLToSQL')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "CpyFromHTTPToDL",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "SetFileName",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "CopyFromHTTPToDL",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"fileSystem": {
-									"value": "@pipeline().parameters.fileSystem",
-									"type": "Expression"
-								},
-								"directory": {
-									"value": "@pipeline().parameters.directory",
-									"type": "Expression"
-								},
-								"fileName": {
-									"value": "@variables('fileName')",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "SetFileName",
-						"type": "SetVariable",
-						"dependsOn": [],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "fileName",
-							"value": {
-								"value": "@concat(pipeline().parameters.file,'.csv')",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "CheckTableExist",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "LookupTableExist",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@equals(activity('LookupTableExist').output.firstRow.res,1)",
-								"type": "Expression"
-							},
-							"ifTrueActivities": [
-								{
-									"name": "DropTable",
-									"type": "Script",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"linkedServiceName": {
-										"referenceName": "AzureSQL_Rebrickable",
-										"type": "LinkedServiceReference"
-									},
-									"typeProperties": {
-										"scripts": [
-											{
-												"type": "Query",
-												"text": {
-													"value": "drop table @{pipeline().parameters.schemaName}.@{pipeline().parameters.tableName}",
-													"type": "Expression"
-												}
-											}
-										],
-										"scriptBlockExecutionTimeout": "02:00:00"
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "LookupTableExist",
-						"type": "Lookup",
-						"dependsOn": [
-							{
-								"activity": "CpyFromHTTPToDL",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": {
-									"value": "IF OBJECT_ID (N'@{pipeline().parameters.schemaName}.@{pipeline().parameters.tableName}',N'U') IS NOT NULL \n   SELECT 1 AS res ELSE SELECT 0 AS res;",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "Rebrickable_SQL_Sink",
-								"type": "DatasetReference",
-								"parameters": {
-									"schemaName": {
-										"value": "@pipeline().parameters.schemaName",
-										"type": "Expression"
-									},
-									"tableName": {
-										"value": "@pipeline().parameters.tableName",
-										"type": "Expression"
-									}
-								}
-							}
-						}
-					},
-					{
-						"name": "CopyFromDLToSQL",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "CheckTableExist",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "DelimitedTextSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "DelimitedTextReadSettings"
-								}
-							},
-							"sink": {
-								"type": "AzureSqlSink",
-								"writeBehavior": "upsert",
-								"upsertSettings": {
-									"useTempDB": true,
-									"keys": [
-										"id"
-									]
-								},
-								"sqlWriterUseTableLock": false,
-								"tableOption": "autoCreate",
-								"disableMetricsCollection": false
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "Rebrickable_Sink_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"fileSystem": {
-										"value": "@pipeline().parameters.fileSystem",
-										"type": "Expression"
-									},
-									"directory": {
-										"value": "@pipeline().parameters.directory",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@concat(pipeline().parameters.file,'.csv')",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "Rebrickable_SQL_Sink",
-								"type": "DatasetReference",
-								"parameters": {
-									"schemaName": {
-										"value": "@pipeline().parameters.schemaName",
-										"type": "Expression"
-									},
-									"tableName": {
-										"value": "@pipeline().parameters.tableName",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"schemaName": {
-						"type": "string",
-						"defaultValue": "test"
-					},
-					"tableName": {
-						"type": "string",
-						"defaultValue": "themes"
-					},
-					"fileSystem": {
-						"type": "string",
-						"defaultValue": "lego"
-					},
-					"directory": {
-						"type": "string",
-						"defaultValue": "themes"
-					},
-					"file": {
-						"type": "string",
-						"defaultValue": "themes"
-					}
-				},
-				"variables": {
-					"fileName": {
-						"type": "String"
-					}
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-08-08T03:32:42Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/CopyFromHTTPToDL')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/CopyFilesToSQL')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Files",
-						"type": "ForEach",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@pipeline().globalParameters.fileList",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "ExeCopyFromDLToSQL",
-									"type": "ExecutePipeline",
-									"dependsOn": [
-										{
-											"activity": "SetTableName",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "CopyFromDLToSQL",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"schemaName": {
-												"value": "@pipeline().parameters.schemaName",
-												"type": "Expression"
-											},
-											"tableName": {
-												"value": "@variables('tableName')",
-												"type": "Expression"
-											},
-											"fileSystem": {
-												"value": "@pipeline().parameters.fileSystem",
-												"type": "Expression"
-											},
-											"directory": {
-												"value": "@variables('tableName')",
-												"type": "Expression"
-											},
-											"file": {
-												"value": "@variables('tableName')",
-												"type": "Expression"
-											}
-										}
-									}
-								},
-								{
-									"name": "SetTableName",
-									"type": "SetVariable",
-									"dependsOn": [],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "tableName",
-										"value": {
-											"value": "@replace(item(), '.csv.gz', '')",
-											"type": "Expression"
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"fileSystem": {
-						"type": "string",
-						"defaultValue": "lego"
-					},
-					"schemaName": {
-						"type": "string",
-						"defaultValue": "test"
-					}
-				},
-				"variables": {
-					"tableName": {
-						"type": "String"
-					}
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-08-08T03:57:40Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/CopyFromDLToSQL')]"
 			]
 		}
 	]
